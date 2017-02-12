@@ -1,0 +1,7 @@
+/logs/*
+/[\/]+#
+/.vscode
+*.pyc
+staticfiles
+tags
+db.sqlite3

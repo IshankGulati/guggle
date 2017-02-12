@@ -1,0 +1,34 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<h1 class="center-text">Guggle search engine</h1>
+
+<h3>Example usage:</h3>
+<p>An api endpoint for indexing</p>
+<code>
+  POST https://guggle.herokuapp.com/index  <br>
+  { <br>
+  "id": "1", <br>
+  "title": "quick fox", <br>
+  "data": "A fox is usually quick and brown." <br>
+  } <br>
+
+  200 OK
+</code><br/>
+<p>An api endpoint for search</p>
+<code>GET https://guggle.herokuapp.com/search?q=quick%20fox  <br>
+
+[ <br>
+{ <br>
+"id": "1", <br>
+"title": "quick fox", <br>
+"data": "A fox is usually quick and brown." <br>
+}, <br>
+{ <br>
+"id": "2", <br>
+"title": "lazy dog", <br>
+"data": "A quick brown fox jumped over lazy dog. A fox is always jumping." <br>
+} <br>
+] <br>
+</code>
+{% endblock %}

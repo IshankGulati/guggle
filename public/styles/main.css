@@ -1,0 +1,15 @@
+body {
+	margin:40px;
+}
+
+h1, p, h3 {
+	font-family: 'Indie Flower' !important;
+}
+
+.center-text {
+	text-align: center;
+}
+
+code {
+	color: blue;
+}
