@@ -94,19 +94,21 @@ class SearchView(View):
                 token_index = {}
             token_dict[token] = token_index
             ids = []
-            for meta in token_index.get('doc_meta', {}):
-                ids.append(meta.get('doc_ids'))
-                if meta.get('doc_ids') not in tf_dict:
-                    tf_dict[meta.get('doc_ids')] = {}
-                tf_dict[meta.get('doc_ids')][token] = meta.get('term_freq')
+            if token_index is not None and 'doc_meta' in token_index:
+                for meta in token_index.get('doc_meta', {}):
+                    ids.append(meta.get('doc_ids'))
+                    if meta.get('doc_ids') not in tf_dict:
+                        tf_dict[meta.get('doc_ids')] = {}
+                    tf_dict[meta.get('doc_ids')][token] = meta.get('term_freq')
             try:
                 docs = DOCUMENT_COLL.find({'_id': {'$in': ids}})
             except PyMongoError:
                 docs = []
-            for doc in docs:
-                docs_dict[doc.get('_id')] = doc
-        if len(docs) is not 0:
-            docs = sorted([score(doc) for doc in docs_dict.values()],
-                          key=lambda k: k['score'], reverse=True)
+            if docs is not None:
+                for doc in docs:
+                    docs_dict[doc.get('_id')] = doc
+
+        docs = sorted([score(doc) for doc in docs_dict.values()],
+                      key=lambda k: k['score'], reverse=True)
         return JsonResponse(docs, safe=False)
 
