@@ -1,8 +1,10 @@
 import math
 from bson.objectid import ObjectId
+from pymongo.errors import PyMongoError
 
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseServerError
 from django.http.response import JsonResponse
 from django.conf import settings
 
@@ -31,7 +33,10 @@ class IndexView(View):
             'data': data
             }
         # insert raw document in mongodb
-        DOCUMENT_COLL.update(query, update, True)
+        try:
+            DOCUMENT_COLL.update(query, update, True)
+        except PyMongoError:
+            return HttpResponseServerError
         context = "{0} {1}".format(title, data)
         doc = IndexDocument(_id, context)
         doc.execute()
@@ -46,7 +51,10 @@ class IndexView(View):
                     }}
                 }
             bulk.find(query).upsert().update_one(update)
-        bulk.execute()
+        try:
+            bulk.execute()
+        except PyMongoError:
+            return HttpResponseServerError
         return HttpResponse(status=200)
 
 
@@ -75,20 +83,30 @@ class SearchView(View):
         docs_dict = {}
         token_dict = {}
         tf_dict = {}
-        total_docs = DOCUMENT_COLL.find().count()
+        try:
+            total_docs = DOCUMENT_COLL.find().count()
+        except PyMongoError:
+            total_docs = 0
         for token in tokens:
-            token_index = INDEX_COLL.find_one({'term': token})
+            try:
+                token_index = INDEX_COLL.find_one({'term': token})
+            except PyMongoError:
+                token_index = {}
             token_dict[token] = token_index
             ids = []
-            for meta in token_index.get('doc_meta'):
+            for meta in token_index.get('doc_meta', {}):
                 ids.append(meta.get('doc_ids'))
                 if meta.get('doc_ids') not in tf_dict:
                     tf_dict[meta.get('doc_ids')] = {}
                 tf_dict[meta.get('doc_ids')][token] = meta.get('term_freq')
-            docs = DOCUMENT_COLL.find({'_id': {'$in': ids}})
+            try:
+                docs = DOCUMENT_COLL.find({'_id': {'$in': ids}})
+            except PyMongoError:
+                docs = []
             for doc in docs:
                 docs_dict[doc.get('_id')] = doc
-        docs = sorted([score(doc) for doc in docs_dict.values()],
-                      key=lambda k: k['score'], reverse=True)
+        if len(docs) is not 0:
+            docs = sorted([score(doc) for doc in docs_dict.values()],
+                          key=lambda k: k['score'], reverse=True)
         return JsonResponse(docs, safe=False)
 
