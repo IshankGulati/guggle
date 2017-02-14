@@ -1,12 +1,14 @@
 import math
+import json
 from bson.objectid import ObjectId
-from pymongo.errors import PyMongoError
 
 from django.views import View
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.http import HttpResponseServerError
 from django.http.response import JsonResponse
 from django.conf import settings
+
+from pymongo.errors import PyMongoError
 
 from utils.index import IndexDocument
 
@@ -20,9 +22,10 @@ class IndexView(View):
     """Used to index the documents.
     """
     def post(self, request, *args, **kwargs):
-        _id = request.POST.get('id', None)
-        title = request.POST.get('title', None)
-        data = request.POST.get('data', None)
+        data = json.loads(request.body)
+        _id = data.get('id', None)
+        title = data.get('title', None)
+        data = data.get('data', None)
 
         if _id is None or title is None or data is None:
             return HttpResponseBadRequest
